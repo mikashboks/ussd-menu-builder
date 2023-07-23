@@ -29,14 +29,16 @@ declare class UssdMenu extends EventEmitter {
   provider: UssdMenu.UssdMenuProvider;
   args: UssdMenu.UssdGatewayArgs;
   states: Array<UssdState>;
-  result: string;
+  result: UssdResponseWrapper;
   val: string;
 
   callOnResult(): void;
 
-  con(text: string): void;
+  con(response: UssdResponse): void;
 
-  end(text: string): void;
+  end(response: UssdResponse): void;
+
+  formatResponse(response: UssdResponseWrapper, formatter?: (response: UssdResponseWrapper)=> string): any;
 
   getRoute(
     args: UssdMenu.UssdGatewayArgs | UssdMenu.HubtelArgs
@@ -50,13 +52,13 @@ declare class UssdMenu extends EventEmitter {
     args: UssdMenu.UssdGatewayArgs | UssdMenu.HubtelArgs
   ): UssdMenu.UssdGatewayArgs;
 
-  onResult?(result: string | UssdMenu.HubtelResponse): void;
+  onResult?(result: UssdResponseWrapper | UssdMenu.HubtelResponse): void;
 
   resolveRoute(route: string, callback: Function): void;
 
   resolve?(value: string): void;
 
-  run(args: UssdMenu.UssdGatewayArgs, onResult?: Function): Promise<string>;
+  run(args: UssdMenu.UssdGatewayArgs, onResult?: Function): Promise<UssdResponseWrapper>;
 
   runState(state: UssdState): void;
 
@@ -84,7 +86,7 @@ declare namespace UssdMenu {
     phoneNumber: string;
     sessionId: string;
     serviceCode: string;
-    Operator: string;
+    operator: string;
   }
 
   interface HubtelResponse {
@@ -98,18 +100,18 @@ declare namespace UssdMenu {
     ServiceCode: string;
     Type: "Initiation" | "Response" | "Release" | "Timeout";
     Message: string;
-    Operator: "Tigo" | "Airtel" | "MTN" | "Vodafone" | "Safaricom";
+    Operator: "Tigo" | "Airtel" | "MTN" | "Vodafone" | "Safaricom" | "Orange";
     Sequence: number;
     ClientState?: any;
   }
 
-  type UssdMenuProvider = "africasTalking" | "hubtel";
+  type UssdMenuProvider = "africasTalking" | "hubtel" | "mikashboks";
   interface UssdMenuOptions {
     provider?: UssdMenuProvider;
   }
 
   interface UssdStateOptions {
-    run(): void;
+    run?(): void;
     next?: NextState;
     defaultNext?: string;
   }
@@ -131,5 +133,69 @@ declare namespace UssdMenu {
       value: any,
       callback?: Function
     ): Promise<any> | void;
+
+    getAll(sessionId: string, callback?: Function): Promise<any> | void;
   }
+
+  interface Link {
+    href?: string;
+    text?: string;
+    key?: string;
+  }
+  
+  interface ContentPageResponse {
+    __typeName: "ContentPageResponse"
+    descr?: string;
+    content?: string;
+    links?: Link[];
+    nav?: 'default' | 'stop' | 'end';
+    volatile?: boolean;
+    ismenu?: boolean;
+    autoIncrementKeys?: boolean;
+  }
+  
+  interface RedirectPageResponse {
+    __typeName: "RedirectPageResponse"
+    descr?: string;
+    erl?: string;
+    encodeUrl?: boolean;
+    nav?: 'default' | 'stop' | 'end';
+    volatile?: boolean;
+    ismenu?: boolean;
+  }
+  
+  interface FormPageResponse {
+    __typeName: "FormPageResponse"
+    descr?: string;
+    prompt?: string;
+    var?: string;
+    action?: string;
+    nav?: 'default' | 'stop' | 'end';
+    volatile?: boolean;
+    ismenu?: boolean;
+    kind?: 'alpha' | 'digit' | 'alphanum';
+    req?: {
+        query: {
+            [key: string]: string;
+        };
+    };
+  }
+  
+  interface EmptyPageResponse {
+    __typeName: "EmptyPageResponse"
+    descr?: string;
+    nav?: 'default' | 'stop' | 'end';
+  }
+  
+  
+  type UssdResponse = ContentPageResponse | RedirectPageResponse | FormPageResponse | EmptyPageResponse;
+  type UssdResponseWrapper = {
+    response: UssdResponse;
+    hasNext: boolean;
+  }
+  
+  interface UssdResponseFormatter {
+    (response: UssdResponseWrapper): string;
+  }
+  
 }
