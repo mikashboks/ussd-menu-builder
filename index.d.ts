@@ -173,7 +173,7 @@ declare namespace UssdMenu {
     nav?: 'default' | 'stop' | 'end';
     volatile?: boolean;
     ismenu?: boolean;
-    kind?: 'alpha' | 'digit' | 'alphanum';
+    kind?: 'alpha' | 'digits' | 'alphanum';
     req?: {
         query: {
             [key: string]: string;
